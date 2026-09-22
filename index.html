@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#eae8e0" />
+    <meta
+      name="description"
+      content="Два голоса, короткие партии и управление звучанием в браузере."
+    />
+    <title>Сдвиг — синтезатор</title>
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff633b'/%3E%3Cpath d='M6 21L13 11H26M6 26H19L26 16' fill='none' stroke='%23232323' stroke-width='3'/%3E%3C/svg%3E"
+    />
+    <script type="module" src="/src/main.js"></script>
+  </head>
+  <body>
+    <main class="instrument">
+      <header class="masthead">
+        <div class="brand">
+          <svg viewBox="0 0 48 48" aria-hidden="true">
+            <path d="M6 28 19 10h23M6 40h23l13-18" />
+          </svg>
+          <h1>Сдвиг</h1>
+        </div>
+        <p class="subtitle">Два голоса.<br />Один ритм.</p>
+        <span class="edition">ЭТЮД / 01</span>
+      </header>
+
+      <section class="transport" aria-label="Общее управление">
+        <div class="playback">
+          <div class="status" role="status">
+            <span class="status-dot"></span
+            ><span id="status">Готов к запуску</span>
+          </div>
+          <div class="transport-buttons">
+            <button id="play" class="play-button" type="button">
+              <span aria-hidden="true">▶</span> Играть
+            </button>
+            <button id="stop" class="stop-button" type="button" disabled>
+              <span aria-hidden="true">■</span> Стоп
+            </button>
+          </div>
+        </div>
+        <div class="control master-control">
+          <label for="tempo"
+            >Темп <output id="tempo-value" for="tempo">92 BPM</output></label
+          >
+          <input
+            id="tempo"
+            type="range"
+            min="50"
+            max="150"
+            value="92"
+            step="1"
+          />
+          <div class="range-labels"><span>50</span><span>150</span></div>
+        </div>
+        <div class="control master-control">
+          <label for="master"
+            >Общая громкость
+            <output id="master-value" for="master">−8 дБ</output></label
+          >
+          <input
+            id="master"
+            type="range"
+            min="-36"
+            max="-3"
+            value="-8"
+            step="1"
+          />
+          <div class="range-labels"><span>Тише</span><span>Громче</span></div>
+        </div>
+      </section>
+
+      <p id="error" class="error" role="alert" hidden></p>
+      <noscript
+        ><p class="error">
+          Для работы синтезатора включите JavaScript в браузере.
+        </p></noscript
+      >
+
+      <div id="voices" class="voices"></div>
+
+      <footer class="instrument-footer">
+        <p>Начни с одного голоса. Добавь второй и найди баланс.</p>
+        <div class="output-level">
+          <span>Выход</span
+          ><meter
+            id="level"
+            aria-label="Уровень выхода"
+            min="-60"
+            max="0"
+            low="-30"
+            high="-6"
+            optimum="-12"
+            value="-60"
+          ></meter
+          ><output id="level-value">−∞ дБ</output>
+        </div>
+      </footer>
+    </main>
+  </body>
+</html>
