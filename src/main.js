@@ -1,6 +1,7 @@
 import './style.css'
-import { settings, voices } from './patterns.js'
+import { settings, voices, chords, getStepLabel } from './patterns.js'
 import { SynthEngine } from './audio.js'
+import { SpaceScene } from './space.js'
 
 const formatDb = (value) => `${value < 0 ? '−' : ''}${Math.abs(value)} дБ`
 const controls = [
@@ -42,6 +43,16 @@ const controls = [
     step: 0.01,
     ends: ['Сухой звук', 'Больше эха'],
     format: (value) => `${Math.round(value * 100)}%`
+  },
+  {
+    key: 'reverb',
+    label: 'Пространство',
+    min: 0,
+    max: 1,
+    step: 0.01,
+    ends: ['Сухой звук', 'Больше объёма'],
+    format: (value) => `${Math.round(value * 100)}%`,
+    wide: true
   }
 ]
 
@@ -50,13 +61,35 @@ const stopButton = document.querySelector('#stop')
 const status = document.querySelector('#status')
 const errorMessage = document.querySelector('#error')
 const cards = new Map()
+const chordStrip = document.querySelector('#chords')
+const barCount = String(chords.length).padStart(2, '0')
+document.querySelector('#bar-position').textContent = `01 / ${barCount}`
+document.querySelector('.score-label').textContent =
+  `ТЕМА / ${chords.length} ТАКТОВ`
+chordStrip.innerHTML = chords
+  .map((chord) => `<span class="chord">${chord}</span>`)
+  .join('')
+const space = new SpaceScene(
+  document.querySelector('#starlight'),
+  document.querySelector('#motion')
+)
 const engine = new SynthEngine(voices, settings, (id, step) => {
-  cards
-    .get(id)
-    .querySelectorAll('.step')
-    .forEach((element, index) => {
-      element.classList.toggle('is-active', index === step)
+  const card = cards.get(id)
+  const voice = voices.find((item) => item.id === id)
+  const bar = step < 0 ? 0 : Math.floor(step / 8)
+  card.querySelectorAll('.step').forEach((element, index) => {
+    const label = getStepLabel(voice, bar * 8 + index)
+    element.querySelector('.step-note').textContent = label
+    element.classList.toggle('is-rest', label === '—')
+    element.classList.toggle('is-active', step >= 0 && index === step % 8)
+  })
+  if (id === 'saxophone') {
+    chordStrip.querySelectorAll('.chord').forEach((element, index) => {
+      element.classList.toggle('is-current', step >= 0 && index === bar)
     })
+    document.querySelector('#bar-position').textContent =
+      `${String(bar + 1).padStart(2, '0')} / ${barCount}`
+  }
 })
 
 // createVoicePanel — связывает регуляторы одного голоса с его настройками.
@@ -71,14 +104,21 @@ function createVoicePanel(voice, index) {
       <button class="mute-button" type="button" aria-pressed="false" aria-label="Выключить голос ${voice.name}"><span class="voice-dot"></span><span class="mute-label">Включён</span></button>
     </header>
     <div class="pattern" aria-label="Партия голоса ${voice.name}">
-      ${voice.notes.map((note, i) => `<span class="step ${note ? '' : 'is-rest'}"><span class="step-index">${i + 1}</span><span>${note || '—'}</span></span>`).join('')}
+      ${voice.pattern
+        .slice(0, 8)
+        .map(
+          (event, i) =>
+            `<span class="step ${event ? '' : 'is-rest'}"><span class="step-index">${i % 2 === 0 ? i / 2 + 1 : '·'}</span><span class="step-note">${getStepLabel(voice, i)}</span></span>`
+        )
+        .join('')}
     </div>
-    <div class="waveform-control"><label for="${voice.id}-waveform">Форма волны</label><select id="${voice.id}-waveform"><option value="sine">Синус</option><option value="triangle">Треугольник</option><option value="sawtooth">Пила</option></select></div>
+    <p class="pattern-caption">${voice.id === 'saxophone' ? 'Мелодия · тема с вариацией' : 'Б — бочка · М — малый · Р — райд · Х — хэт'}</p>
+    <div class="mode-control"><label for="${voice.id}-mode">${voice.id === 'saxophone' ? 'Характер' : 'Игра'}</label><select id="${voice.id}-mode">${voice.modes.map(([value, label]) => `<option value="${value}">${label}</option>`).join('')}</select></div>
     <div class="voice-controls">
       ${controls
         .map(
           (control) => `
-        <div class="control">
+        <div class="control${control.wide ? ' control-wide' : ''}">
           <label for="${voice.id}-${control.key}">${control.label}<output for="${voice.id}-${control.key}">${control.format(voice[control.key])}</output></label>
           <input id="${voice.id}-${control.key}" data-property="${control.key}" type="range" min="${control.min}" max="${control.max}" step="${control.step}" value="${voice[control.key]}" />
           <div class="range-labels"><span>${control.ends[0]}</span><span>${control.ends[1]}</span></div>
@@ -87,10 +127,10 @@ function createVoicePanel(voice, index) {
         .join('')}
     </div>`
 
-  const waveform = card.querySelector('select')
-  waveform.value = voice.waveform
-  waveform.addEventListener('change', () =>
-    engine.setVoice(voice.id, 'waveform', waveform.value)
+  const mode = card.querySelector('select')
+  mode.value = voice.mode
+  mode.addEventListener('change', () =>
+    engine.setVoice(voice.id, 'mode', mode.value)
   )
 
   card.querySelectorAll('input').forEach((input) => {
@@ -134,7 +174,7 @@ function updateRange(input) {
 function setPlaybackState(state) {
   const labels = {
     stopped: 'Остановлен',
-    starting: 'Включаем звук…',
+    starting: 'Загружаем инструменты…',
     playing: 'Играет',
     stopping: 'Останавливаем…'
   }
@@ -142,6 +182,7 @@ function setPlaybackState(state) {
   document.body.dataset.playback = state
   playButton.disabled = state !== 'stopped'
   stopButton.disabled = state !== 'playing'
+  syncMeter()
 }
 
 voices.forEach((voice, index) =>
@@ -157,7 +198,7 @@ playButton.addEventListener('click', async () => {
   } catch {
     setPlaybackState('stopped')
     errorMessage.textContent =
-      'Не удалось включить звук. Попробуйте ещё раз или откройте страницу в другом браузере.'
+      'Не удалось загрузить инструменты. Проверьте соединение и попробуйте ещё раз.'
     errorMessage.hidden = false
   }
 })
@@ -169,6 +210,8 @@ stopButton.addEventListener('click', async () => {
 })
 
 const tempo = document.querySelector('#tempo')
+tempo.value = settings.tempo
+document.querySelector('#tempo-value').value = `${settings.tempo} BPM`
 tempo.addEventListener('input', () => {
   engine.setTempo(Number(tempo.value))
   document.querySelector('#tempo-value').value = `${tempo.value} BPM`
@@ -176,6 +219,8 @@ tempo.addEventListener('input', () => {
 })
 
 const master = document.querySelector('#master')
+master.value = settings.volume
+document.querySelector('#master-value').value = formatDb(settings.volume)
 master.addEventListener('input', () => {
   engine.setVolume(Number(master.value))
   document.querySelector('#master-value').value = formatDb(Number(master.value))
@@ -186,17 +231,40 @@ document.querySelectorAll('input[type="range"]').forEach(updateRange)
 
 const meter = document.querySelector('#level')
 const levelValue = document.querySelector('#level-value')
-const meterTimer = setInterval(() => {
-  const level = engine.getLevel()
-  meter.value = Math.max(-60, Math.min(0, level))
-  levelValue.value = level > -60 ? formatDb(Math.round(level)) : '−∞ дБ'
-}, 100)
+let meterTimer
 
-window.addEventListener('pagehide', () => engine.dispose())
+function updateMeter() {
+  const level = engine.getLevel()
+  const value = Math.max(-60, Math.min(0, Math.round(level)))
+  const label = level > -60 ? formatDb(value) : '−∞ дБ'
+  if (meter.value !== value) meter.value = value
+  if (levelValue.value !== label) levelValue.value = label
+  space.energy = Math.max(0, Math.min(1, (level + 42) / 36))
+}
+
+function syncMeter() {
+  clearInterval(meterTimer)
+  engine.setVisible(!document.hidden)
+  if (engine.playing && !document.hidden) {
+    meterTimer = setInterval(updateMeter, 100)
+  }
+  if (!document.hidden) updateMeter()
+}
+
+document.addEventListener('visibilitychange', syncMeter)
+
+const stopOnHide = () => {
+  engine.dispose()
+  setPlaybackState('stopped')
+}
+window.addEventListener('pagehide', stopOnHide)
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     clearInterval(meterTimer)
+    document.removeEventListener('visibilitychange', syncMeter)
+    window.removeEventListener('pagehide', stopOnHide)
+    space.dispose()
     engine.dispose()
   })
 }

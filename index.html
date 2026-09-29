@@ -3,12 +3,12 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#eae8e0" />
+    <meta name="theme-color" content="#050b14" />
     <meta
       name="description"
-      content="Два голоса, короткие партии и управление звучанием в браузере."
+      content="Космический джаз: саксофон, барабаны и один ритм. Музыкальный инструмент Сдвиг."
     />
-    <title>Сдвиг — синтезатор</title>
+    <title>Сдвиг — космический джаз</title>
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' fill='%23ff633b'/%3E%3Cpath d='M6 21L13 11H26M6 26H19L26 16' fill='none' stroke='%23232323' stroke-width='3'/%3E%3C/svg%3E"
@@ -16,6 +16,17 @@
     <script type="module" src="/src/main.js"></script>
   </head>
   <body>
+    <div class="space" aria-hidden="true">
+      <div class="space-image"></div>
+      <canvas id="starlight"></canvas>
+      <div class="space-shade"></div>
+    </div>
+    <div class="scene-caption" aria-hidden="true">
+      COSMIC<br />JAZZ<br />SYNTH
+    </div>
+    <div class="scene-caption scene-caption-right" aria-hidden="true">
+      MUSIC<br />BEYOND<br />GRAVITY
+    </div>
     <main class="instrument">
       <header class="masthead">
         <div class="brand">
@@ -25,7 +36,10 @@
           <h1>Сдвиг</h1>
         </div>
         <p class="subtitle">Два голоса.<br />Один ритм.</p>
-        <span class="edition">ЭТЮД / 01</span>
+        <div class="edition">
+          <span>ЭТЮД / 01</span
+          ><span class="edition-name">КОСМИЧЕСКИЙ ДЖАЗ</span>
+        </div>
       </header>
 
       <section class="transport" aria-label="Общее управление">
@@ -45,14 +59,14 @@
         </div>
         <div class="control master-control">
           <label for="tempo"
-            >Темп <output id="tempo-value" for="tempo">92 BPM</output></label
+            >Темп <output id="tempo-value" for="tempo">88 BPM</output></label
           >
           <input
             id="tempo"
             type="range"
             min="50"
             max="150"
-            value="92"
+            value="88"
             step="1"
           />
           <div class="range-labels"><span>50</span><span>150</span></div>
@@ -60,14 +74,14 @@
         <div class="control master-control">
           <label for="master"
             >Общая громкость
-            <output id="master-value" for="master">−8 дБ</output></label
+            <output id="master-value" for="master">−6 дБ</output></label
           >
           <input
             id="master"
             type="range"
             min="-36"
             max="-3"
-            value="-8"
+            value="-6"
             step="1"
           />
           <div class="range-labels"><span>Тише</span><span>Громче</span></div>
@@ -83,6 +97,12 @@
 
       <div id="voices" class="voices"></div>
 
+      <div class="score" aria-label="Музыкальная фраза">
+        <span class="score-label">ТЕМА / 8 ТАКТОВ</span>
+        <div id="chords" class="chords" aria-label="Гармония фразы"></div>
+        <span id="bar-position" class="bar-position">01 / 08</span>
+      </div>
+
       <footer class="instrument-footer">
         <p>Начни с одного голоса. Добавь второй и найди баланс.</p>
         <div class="output-level">
@@ -97,9 +117,16 @@
             optimum="-12"
             value="-60"
           ></meter
-          ><output id="level-value">−∞ дБ</output>
+          ><output id="level-value" aria-live="off">−∞ дБ</output>
         </div>
       </footer>
     </main>
+    <footer class="scene-footer">
+      <span>ДЖАЗ НА СВОЕЙ ОРБИТЕ</span>
+      <button id="motion" type="button" aria-pressed="true">
+        <span class="motion-icon" aria-hidden="true">Ⅱ</span
+        ><span class="motion-label">Остановить фон</span>
+      </button>
+    </footer>
   </body>
 </html>
