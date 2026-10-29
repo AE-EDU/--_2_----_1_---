@@ -55,6 +55,9 @@
             <button id="stop" class="stop-button" type="button" disabled>
               <span aria-hidden="true">■</span> Стоп
             </button>
+            <button id="finish" class="finish-button" type="button" aria-pressed="false" disabled>
+              Завершить фразу
+            </button>
           </div>
         </div>
         <div class="control master-control">
@@ -74,14 +77,14 @@
         <div class="control master-control">
           <label for="master"
             >Общая громкость
-            <output id="master-value" for="master">−6 дБ</output></label
+            <output id="master-value" for="master">−3 дБ</output></label
           >
           <input
             id="master"
             type="range"
             min="-36"
-            max="-3"
-            value="-6"
+            max="0"
+            value="-3"
             step="1"
           />
           <div class="range-labels"><span>Тише</span><span>Громче</span></div>
@@ -98,13 +101,14 @@
       <div id="voices" class="voices"></div>
 
       <div class="score" aria-label="Музыкальная фраза">
-        <span class="score-label">ТЕМА / 8 ТАКТОВ</span>
+        <span class="score-label">КРУГ 01 / 8 ТАКТОВ</span>
         <div id="chords" class="chords" aria-label="Гармония фразы"></div>
         <span id="bar-position" class="bar-position">01 / 08</span>
       </div>
 
       <footer class="instrument-footer">
-        <p>Начни с одного голоса. Добавь второй и найди баланс.</p>
+        <p>Появление → тема → сдвиг → удаление</p>
+        <button id="reset" class="reset-button" type="button">К началу этюда</button>
         <div class="output-level">
           <span>Выход</span
           ><meter

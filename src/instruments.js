@@ -2,6 +2,7 @@ import * as Tone from 'tone'
 
 // createSaxophone — воспроизводит семплы саксофона с разной артикуляцией.
 export function createSaxophone() {
+  let gate = 0.9
   let timer
   let resolveLoad
   let rejectLoad
@@ -19,7 +20,7 @@ export function createSaxophone() {
     },
     baseUrl: `${import.meta.env.BASE_URL}samples/saxophone/`,
     attack: 0.025,
-    release: 0.22,
+    release: 0.16,
     onload: resolveLoad,
     onerror: rejectLoad
   })
@@ -40,17 +41,18 @@ export function createSaxophone() {
     play: (event, time) =>
       sampler.triggerAttackRelease(
         event.note,
-        event.duration,
+        Tone.Time(event.duration).toSeconds() * gate,
         time,
         event.velocity
       ),
     setMode(mode) {
       const envelopes = {
-        soft: [0.025, 0.22],
-        airy: [0.045, 0.32],
-        short: [0.002, 0.065]
+        soft: [0.025, 0.16, 0.9],
+        airy: [0.045, 0.28, 0.96],
+        short: [0.005, 0.065, 0.6]
       }
-      const [attack, release] = envelopes[mode]
+      const [attack, release, length] = envelopes[mode]
+      gate = length
       sampler.attack = attack
       sampler.release = release
     }
@@ -63,13 +65,13 @@ export function createDrums() {
   const kick = new Tone.MembraneSynth({
     pitchDecay: 0.025,
     octaves: 2.5,
-    volume: -4,
+    volume: -6,
     envelope: { attack: 0.002, decay: 0.22, sustain: 0, release: 0.08 }
   }).connect(output)
-  const snareFilter = new Tone.Filter(900, 'highpass').connect(output)
+  const snareFilter = new Tone.Filter(450, 'highpass').connect(output)
   const snare = new Tone.NoiseSynth({
     noise: { type: 'pink' },
-    volume: -6,
+    volume: -3,
     envelope: { attack: 0.018, decay: 0.16, sustain: 0, release: 0.06 }
   }).connect(snareFilter)
   const ride = new Tone.MetalSynth({
@@ -77,13 +79,13 @@ export function createDrums() {
     modulationIndex: 24,
     resonance: 3800,
     octaves: 1.2,
-    volume: -17,
+    volume: -15,
     envelope: { attack: 0.002, decay: 0.55, release: 0.12 }
   }).connect(output)
-  const hatFilter = new Tone.Filter(6500, 'highpass').connect(output)
+  const hatFilter = new Tone.Filter(4800, 'highpass').connect(output)
   const hat = new Tone.NoiseSynth({
     noise: { type: 'white' },
-    volume: -13,
+    volume: -10,
     envelope: { attack: 0.001, decay: 0.035, sustain: 0, release: 0.02 }
   }).connect(hatFilter)
 
@@ -102,7 +104,7 @@ export function createDrums() {
       snare.noise.type = brushes ? 'pink' : 'white'
       snare.envelope.attack = brushes ? 0.018 : 0.002
       snare.envelope.decay = brushes ? 0.16 : 0.1
-      snare.volume.rampTo(brushes ? -6 : -9, 0.04)
+      snare.volume.rampTo(brushes ? -3 : -6, 0.04)
     }
   }
 }

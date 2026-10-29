@@ -1,4 +1,4 @@
-export const settings = { tempo: 88, volume: -6, swing: 0.08 }
+export const settings = { tempo: 88, volume: -3, swing: 0.08 }
 
 export const chords = [
   'Dm9',
@@ -100,6 +100,100 @@ const drums = Array.from({ length: chords.length }, (_, bar) => [
   { hat: 0.16, snare: bar % 4 === 3 ? 0.22 : 0 }
 ]).flat()
 
+const saxophoneVariation = [
+  [
+    null,
+    ['D5', '8n', 0.65],
+    ['C5', '8n', 0.59],
+    ['A4', '8n', 0.56],
+    null,
+    ['F4', '4n', 0.62],
+    null,
+    null
+  ],
+  [
+    ['A4', '4n', 0.66],
+    null,
+    ['F4', '8n', 0.58],
+    null,
+    ['D4', '4n.', 0.6],
+    null,
+    null,
+    null
+  ],
+  [
+    null,
+    null,
+    ['C5', '4n', 0.69],
+    null,
+    ['A4', '8n', 0.6],
+    ['G4', '8n', 0.54],
+    ['F4', '4n', 0.63],
+    null
+  ],
+  [
+    ['G4', '4n.', 0.64],
+    null,
+    null,
+    ['E4', '8n', 0.53],
+    null,
+    ['D4', '8n', 0.5],
+    ['E4', '4n', 0.6],
+    null
+  ],
+  [
+    null,
+    ['A4', '8n', 0.6],
+    ['D5', '8n', 0.74],
+    ['C5', '8n', 0.66],
+    ['A4', '4n', 0.64],
+    null,
+    ['F4', '8n', 0.54],
+    null
+  ],
+  [
+    ['F4', '4n', 0.63],
+    null,
+    null,
+    ['A4', '8n', 0.58],
+    ['C5', '4n', 0.67],
+    null,
+    null,
+    ['A4', '8n', 0.52]
+  ],
+  [
+    ['G4', '4n', 0.66],
+    null,
+    ['E4', '8n', 0.55],
+    ['G4', '8n', 0.58],
+    ['A4', '8n', 0.64],
+    ['G4', '8n', 0.55],
+    ['E4', '4n', 0.57],
+    null
+  ],
+  [['D4', '2n.', 0.62], null, null, null, null, null, null, null]
+]
+  .flat()
+  .map(
+    (note) =>
+      note && {
+        note: note[0],
+        duration: note[1],
+        velocity: note[2]
+      }
+  )
+
+const sparseDrums = Array.from({ length: chords.length }, (_, bar) => [
+  { kick: 0.54, ride: bar % 4 === 0 ? 0.18 : 0 },
+  null,
+  { hat: 0.16 },
+  null,
+  { snare: 0.38 },
+  null,
+  { hat: 0.18 },
+  bar % 4 === 3 ? { snare: 0.15 } : null
+]).flat()
+
 export const voices = [
   {
     id: 'saxophone',
@@ -111,35 +205,49 @@ export const voices = [
       ['airy', 'Воздушно'],
       ['short', 'Коротко']
     ],
-    volume: -2,
+    volume: -4,
     pan: -0.2,
     cutoff: 5200,
     echo: 0.16,
     reverb: 0.13,
-    muted: false,
+    muted: true,
+    pendingMuted: null,
+    variant: 'theme',
+    pendingVariant: null,
+    variants: [
+      { id: 'theme', name: 'Тема', pattern: saxophone },
+      { id: 'variation', name: 'Вариация', pattern: saxophoneVariation }
+    ],
     pattern: saxophone
   },
   {
     id: 'drums',
     name: 'Барабаны',
-    description: 'Мягкий бит · акценты на 2 и 4',
-    mode: 'sticks',
+    description: 'Ритмическая опора · два рисунка',
+    mode: 'brushes',
     modes: [
       ['brushes', 'Щётки'],
       ['sticks', 'Палочки']
     ],
-    volume: -4,
+    volume: -1,
     pan: 0.2,
     cutoff: 6800,
     echo: 0.02,
     reverb: 0.06,
     muted: false,
-    pattern: drums
+    pendingMuted: null,
+    variant: 'sparse',
+    pendingVariant: null,
+    variants: [
+      { id: 'sparse', name: 'Редко', pattern: sparseDrums },
+      { id: 'dense', name: 'Плотно', pattern: drums }
+    ],
+    pattern: sparseDrums
   }
 ]
 
-export function getStepLabel(voice, step) {
-  const event = voice.pattern[step]
+export function getStepLabel(voice, step, pattern = voice.pattern) {
+  const event = pattern[step]
   if (!event) return '—'
   if (voice.id === 'saxophone') return event.note
   return Object.entries({ kick: 'Б', snare: 'М', hat: 'Х', ride: 'Р' })
